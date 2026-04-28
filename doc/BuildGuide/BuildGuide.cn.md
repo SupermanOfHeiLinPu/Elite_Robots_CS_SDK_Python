@@ -3,68 +3,102 @@
 ## 依赖安装
 
 ### Ubuntu
+
 ```bash
 sudo apt update
 
-sudo apt install libboost-all-dev
+# 基础工具
+sudo apt install -y build-essential cmake git python3 python3-pip
 
-sudo apt install libssh-dev # 可选，建议安装，建议版本为0.9.6
+# SDK依赖
+sudo apt install -y libboost-all-dev libssh-dev
 
-# sudo apt install sshpass #如果没安装 libssh-dev 则需要安装此指令
+# 运动学插件依赖（开启 ELITE_COMPILE_KIN_PLUGIN=ON 时建议安装）
+sudo apt install -y libeigen3-dev liborocos-kdl-dev
+
+# 当前工程 python_wheel 使用 --no-build-isolation，
+# 需要在“你实际用于构建的 Python 环境”里预先安装以下包
 python3 -m pip install --upgrade pip setuptools wheel build
-
-python3 -m pip install --user pybind11 pybind11_stubgen
+python3 -m pip install pybind11 pybind11_stubgen
 ```
 
 ### Windows
 
-使用`vcpkg`安装
+使用 `vcpkg` 安装：
+
 ```bash
 .\vcpkg install boost-asio
-
 .\vcpkg install libssh
-
 .\vcpkg integrate install
 ```
 
-（可选）如果已经使用 vcpkg 安装过完整的`boost`库，建议执行下面指令删除 vcpkg 的 python 相关内容，否则编译此库时会使用 vcpkg 的 python 而不是你操作系统中的 python
-``` bash
+可选：如果已经通过 vcpkg 安装了完整 boost，建议移除 vcpkg 的 python 相关包，避免优先使用 vcpkg 自带 python。
+
+```bash
 .\vcpkg remove python3 boost-parameter-python boost-python
-
 .\vcpkg integrate install
 ```
 
-安装python打包的必须组件
+安装 Python 打包相关组件：
+
 ```bash
 python3 -m pip install --upgrade pip setuptools wheel build
-
-python3 -m pip install --user pybind11 pybind11_stubgen
+python3 -m pip install pybind11 pybind11_stubgen
 ```
 
 ## 编译与安装
 
-### Ubuntu
+### 方案 A：常规方式（可联网）
+
 ```bash
 cd <clone of this repository>
 
-mkdir build && cd build
+cmake -S . -B build \
+	-DELITE_CS_SDK_REPO=<Elite_Robots_CS_SDK 本地路径或仓库地址> \
+	-DELITE_COMPILE_KIN_PLUGIN=ON
 
-cmake ..
+cmake --build build -j$(nproc) --target python_wheel
 
-make
-
-pip install ../dist/elite_cs_sdk-*.whl
+python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 ```
 
-### Windows
+### 方案 B：弱网/离线方式（推荐 CI 或内网）
+
 ```bash
 cd <clone of this repository>
 
-mkdir build && cd build
+cmake -S . -B build \
+	-DFETCHCONTENT_SOURCE_DIR_PYBIND11=<本地 pybind11 源码目录> \
+	-DFETCHCONTENT_SOURCE_DIR_ELITE_CS_SDK=<本地 Elite_Robots_CS_SDK 源码目录> \
+	-DFETCHCONTENT_UPDATES_DISCONNECTED=ON \
+	-DELITE_COMPILE_KIN_PLUGIN=ON \
+	-DPython3_EXECUTABLE=$(which python3)
 
-cmake ..
+cmake --build build -j1 --target python_wheel
 
-cmake --build . --config Release
+python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
+```
 
-pip install ../dist/elite_cs_sdk-*.whl
+### Windows 参考命令
+
+```bash
+cd <clone of this repository>
+
+cmake -S . -B build \
+	-DELITE_CS_SDK_REPO=<Elite_Robots_CS_SDK 本地路径或仓库地址> \
+	-DELITE_COMPILE_KIN_PLUGIN=ON
+
+cmake --build build --config Release --target python_wheel
+
+python -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
+```
+
+## 说明
+
+- `python_wheel` 目标会自动触发扩展编译、`.pyi` 生成和 wheel 打包。
+- 运动学插件开启后，wheel 打包阶段会自动复制 `libelite_kdl_kinematics` 到包目录。
+- 如果只想验证扩展编译，不打包 wheel，可执行：
+
+```bash
+cmake --build build -j1 --target elite_cs_sdk_python
 ```

@@ -50,6 +50,16 @@ FetchContent_MakeAvailable(elite_cs_sdk)
 
 set(ELITE_SDK_SRC_DIR ${elite_cs_sdk_SOURCE_DIR} PARENT_SCOPE)
 
+if(TARGET elite-cs-series-sdk_SHARED)
+  set(ELITE_SDK_SHARED_TARGET elite-cs-series-sdk_SHARED)
+elseif(TARGET elite_cs_series_sdk_SHARED)
+  set(ELITE_SDK_SHARED_TARGET elite_cs_series_sdk_SHARED)
+else()
+  message(FATAL_ERROR "Could not find SDK shared target: elite-cs-series-sdk_SHARED or elite_cs_series_sdk_SHARED")
+endif()
+
+set(ELITE_SDK_SHARED_TARGET ${ELITE_SDK_SHARED_TARGET} PARENT_SCOPE)
+
 file(GLOB_RECURSE BINDING_CPP_SOURCES
   CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
@@ -69,9 +79,47 @@ pybind11_add_module(elite_cs_sdk_python
   ${BINDING_SOURCES}
 )
 
-target_link_libraries(elite_cs_sdk_python PRIVATE elite-cs-series-sdk_SHARED)
+target_link_libraries(elite_cs_sdk_python PRIVATE ${ELITE_SDK_SHARED_TARGET})
 
-add_dependencies(elite_cs_sdk_python elite-cs-series-sdk_SHARED)
+set(ELITE_KDL_PLUGIN_INCLUDE_DIR
+  "${elite_cs_sdk_SOURCE_DIR}/plugin/kinematics/KdlKinematicsPlugin/include"
+)
+
+if(TARGET elite_kdl_kinematics)
+  target_include_directories(elite_cs_sdk_python PRIVATE "${ELITE_KDL_PLUGIN_INCLUDE_DIR}")
+  target_link_libraries(elite_cs_sdk_python PRIVATE elite_kdl_kinematics)
+
+  # Some environments provide Eigen include dirs without exporting Eigen3::Eigen into this scope.
+  find_package(Eigen3 QUIET)
+
+  if(TARGET Eigen3::Eigen)
+    target_link_libraries(elite_cs_sdk_python PRIVATE Eigen3::Eigen)
+  endif()
+
+  if(DEFINED EIGEN3_INCLUDE_DIR)
+    target_include_directories(elite_cs_sdk_python SYSTEM PRIVATE ${EIGEN3_INCLUDE_DIR})
+  endif()
+
+  if(DEFINED EIGEN3_INCLUDE_DIRS)
+    target_include_directories(elite_cs_sdk_python SYSTEM PRIVATE ${EIGEN3_INCLUDE_DIRS})
+  endif()
+
+  if(DEFINED Eigen3_INCLUDE_DIRS)
+    target_include_directories(elite_cs_sdk_python SYSTEM PRIVATE ${Eigen3_INCLUDE_DIRS})
+  endif()
+
+  if(EXISTS "/usr/include/eigen3")
+    target_include_directories(elite_cs_sdk_python SYSTEM PRIVATE /usr/include/eigen3)
+  endif()
+
+  if(TARGET orocos-kdl)
+    target_link_libraries(elite_cs_sdk_python PRIVATE orocos-kdl)
+  endif()
+
+  target_compile_definitions(elite_cs_sdk_python PRIVATE ELITE_PY_BIND_KDL_KINEMATICS_PLUGIN=1)
+endif()
+
+add_dependencies(elite_cs_sdk_python ${ELITE_SDK_SHARED_TARGET})
 
 # Correctly handle suffixes and RPATH for macOS
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")

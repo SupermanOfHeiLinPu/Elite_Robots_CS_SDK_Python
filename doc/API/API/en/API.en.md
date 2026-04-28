@@ -12,7 +12,7 @@ Applicable SDK version: ***v1.2.0***
 
 - [Dashboard](./Dashboard.en.md)
 
-- [Version info](./VersionInfo.cn.md)
+- [Version info](./VersionInfo.en.md)
 
 - [Log](./Log.en.md)
 
@@ -20,4 +20,6 @@ Applicable SDK version: ***v1.2.0***
 
 - [Controller log](./ControllerLog.en.md)
 
-- [实时工具](./RTUtils.en.md)
+- [RTUtils](./RTUtils.en.md)
+
+- [Kinematics](./Kinematics.en.md)

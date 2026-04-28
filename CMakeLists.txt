@@ -17,6 +17,15 @@ add_custom_target(copy_python_requirements
     COMMENT "Copying .whl requirements into temporary python directory."
 )
 
+set(ELITE_PLUGIN_COPY_COMMANDS "")
+if(TARGET elite_kdl_kinematics)
+    list(APPEND ELITE_PLUGIN_COPY_COMMANDS
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:elite_kdl_kinematics>
+        ${PKG_BUILD_DIR}/package/elite_cs_sdk/$<TARGET_FILE_NAME:elite_kdl_kinematics>
+    )
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     add_custom_command(TARGET copy_python_requirements POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${PKG_BUILD_DIR}
@@ -35,10 +44,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
           "$<TARGET_FILE_DIR:elite_cs_sdk_python>"
           "${PKG_BUILD_DIR}/package/elite_cs_sdk/"
 
-        COMMAND ${CMAKE_COMMAND} -E echo "Copying all files from $<TARGET_FILE_DIR:elite-cs-series-sdk_SHARED> to ${PKG_BUILD_DIR}/package/elite_cs_sdk/"
+        COMMAND ${CMAKE_COMMAND} -E echo "Copying all files from $<TARGET_FILE_DIR:${ELITE_SDK_SHARED_TARGET}> to ${PKG_BUILD_DIR}/package/elite_cs_sdk/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-          "$<TARGET_FILE_DIR:elite-cs-series-sdk_SHARED>"
+                    "$<TARGET_FILE_DIR:${ELITE_SDK_SHARED_TARGET}>"
           "${PKG_BUILD_DIR}/package/elite_cs_sdk/"
+
+            ${ELITE_PLUGIN_COPY_COMMANDS}
     )
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR APPLE)
     add_custom_command(TARGET copy_python_requirements POST_BUILD
@@ -58,8 +69,10 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR APPLE)
         ${PKG_BUILD_DIR}/package/elite_cs_sdk/$<TARGET_FILE_NAME:elite_cs_sdk_python>
 
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:elite-cs-series-sdk_SHARED>
-        ${PKG_BUILD_DIR}/package/elite_cs_sdk/$<TARGET_FILE_NAME:elite-cs-series-sdk_SHARED>
+        $<TARGET_FILE:${ELITE_SDK_SHARED_TARGET}>
+        ${PKG_BUILD_DIR}/package/elite_cs_sdk/$<TARGET_FILE_NAME:${ELITE_SDK_SHARED_TARGET}>
+
+        ${ELITE_PLUGIN_COPY_COMMANDS}
 )
 else()
     message(FATAL_ERROR "Unsupport operating system")
@@ -71,6 +84,7 @@ add_custom_target(python_wheel ALL
     -m pip wheel ${PKG_BUILD_DIR}
     --no-deps
     --use-pep517
+    --no-build-isolation
     --wheel-dir ${CMAKE_SOURCE_DIR}/dist
     COMMENT "Building wheel from temporary python -> dist/"
     USES_TERMINAL
