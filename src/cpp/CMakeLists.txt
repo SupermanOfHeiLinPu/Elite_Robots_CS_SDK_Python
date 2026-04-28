@@ -11,15 +11,31 @@ execute_process(
 )
 
 if(GIT_REMOTE_URL MATCHES "gitee.com")
-  if (NOT DEFINED ELITE_CS_SDK_REPO)
-    set(ELITE_CS_SDK_REPO "https://gitee.com/elite-robots/Elite_Robots_CS_SDK.git")
-  endif()
   set(PYBIND11_REPO "https://gitee.com/mirrors/pybind11.git")
 else()
-  if (NOT DEFINED ELITE_CS_SDK_REPO)
-    set(ELITE_CS_SDK_REPO "https://github.com/Elite-Robots/Elite_Robots_CS_SDK.git")
-  endif()
   set(PYBIND11_REPO "https://github.com/pybind/pybind11.git")
+endif()
+
+if(NOT DEFINED ELITE_CS_SDK_REPO OR ELITE_CS_SDK_REPO STREQUAL "")
+  message(FATAL_ERROR "ELITE_CS_SDK_REPO is required and must point to a local Elite_Robots_CS_SDK repository path.")
+endif()
+
+if(ELITE_CS_SDK_REPO MATCHES "^[A-Za-z]+://")
+  message(FATAL_ERROR "ELITE_CS_SDK_REPO must be a local path. Repository URLs are not supported.")
+endif()
+
+get_filename_component(ELITE_CS_SDK_REPO_ABS "${ELITE_CS_SDK_REPO}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
+if(NOT EXISTS "${ELITE_CS_SDK_REPO_ABS}")
+  message(FATAL_ERROR "ELITE_CS_SDK_REPO does not exist: ${ELITE_CS_SDK_REPO_ABS}")
+endif()
+
+if(NOT IS_DIRECTORY "${ELITE_CS_SDK_REPO_ABS}")
+  message(FATAL_ERROR "ELITE_CS_SDK_REPO must be a directory: ${ELITE_CS_SDK_REPO_ABS}")
+endif()
+
+if(NOT EXISTS "${ELITE_CS_SDK_REPO_ABS}/CMakeLists.txt")
+  message(FATAL_ERROR "ELITE_CS_SDK_REPO must point to the Elite_Robots_CS_SDK repository root (CMakeLists.txt not found).")
 endif()
 
 
@@ -30,14 +46,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(pybind11)
 
-FetchContent_Declare(
-  elite_cs_sdk
-  GIT_REPOSITORY ${ELITE_CS_SDK_REPO}
-  GIT_TAG main
-)
-FetchContent_MakeAvailable(elite_cs_sdk)
+add_subdirectory("${ELITE_CS_SDK_REPO_ABS}" "${CMAKE_BINARY_DIR}/_deps/elite_cs_sdk-build")
 
-set(ELITE_SDK_SRC_DIR ${elite_cs_sdk_SOURCE_DIR} PARENT_SCOPE)
+set(ELITE_SDK_SRC_DIR "${ELITE_CS_SDK_REPO_ABS}" PARENT_SCOPE)
 
 if(TARGET elite-cs-series-sdk_SHARED)
   set(ELITE_SDK_SHARED_TARGET elite-cs-series-sdk_SHARED)
@@ -71,7 +82,7 @@ pybind11_add_module(elite_cs_sdk_python
 target_link_libraries(elite_cs_sdk_python PRIVATE ${ELITE_SDK_SHARED_TARGET})
 
 set(ELITE_KDL_PLUGIN_INCLUDE_DIR
-  "${elite_cs_sdk_SOURCE_DIR}/plugin/kinematics/KdlKinematicsPlugin/include"
+  "${ELITE_CS_SDK_REPO_ABS}/plugin/kinematics/KdlKinematicsPlugin/include"
 )
 
 if(TARGET elite_kdl_kinematics)

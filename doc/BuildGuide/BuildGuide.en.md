@@ -53,8 +53,10 @@ python3 -m pip install pybind11 pybind11_stubgen
 ```bash
 cd <clone of this repository>
 
+# Manually clone/download Elite_Robots_CS_SDK first.
+
 cmake -S . -B build \
-	-DELITE_CS_SDK_REPO=<local path or repository url of Elite_Robots_CS_SDK> \
+	-DELITE_CS_SDK_REPO=<local path of Elite_Robots_CS_SDK> \
 	-DELITE_COMPILE_KIN_PLUGIN=ON
 
 cmake --build build -j$(nproc) --target python_wheel
@@ -67,9 +69,11 @@ python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 ```bash
 cd <clone of this repository>
 
+# Manually clone/download Elite_Robots_CS_SDK first.
+
 cmake -S . -B build \
+	-DELITE_CS_SDK_REPO=<local path of Elite_Robots_CS_SDK> \
 	-DFETCHCONTENT_SOURCE_DIR_PYBIND11=<local pybind11 source dir> \
-	-DFETCHCONTENT_SOURCE_DIR_ELITE_CS_SDK=<local Elite_Robots_CS_SDK source dir> \
 	-DFETCHCONTENT_UPDATES_DISCONNECTED=ON \
 	-DELITE_COMPILE_KIN_PLUGIN=ON \
 	-DPython3_EXECUTABLE=$(which python3)
@@ -84,8 +88,10 @@ python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 ```bash
 cd <clone of this repository>
 
+# Manually clone/download Elite_Robots_CS_SDK first.
+
 cmake -S . -B build \
-	-DELITE_CS_SDK_REPO=<local path or repository url of Elite_Robots_CS_SDK> \
+	-DELITE_CS_SDK_REPO=<local path of Elite_Robots_CS_SDK> \
 	-DELITE_COMPILE_KIN_PLUGIN=ON
 
 cmake --build build --config Release --target python_wheel
@@ -95,6 +101,8 @@ python -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 
 ## Notes
 
+- `ELITE_CS_SDK_REPO` is mandatory and must be a local repository path.
+- Elite_Robots_CS_SDK is no longer fetched by CMake; download it manually in advance.
 - `python_wheel` triggers extension build, `.pyi` generation, and wheel packaging.
 - With kinematics plugin enabled, `libelite_kdl_kinematics` is copied into package directory during wheel packaging.
 - To verify only extension build without packaging, run:

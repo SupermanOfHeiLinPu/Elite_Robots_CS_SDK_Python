@@ -53,8 +53,10 @@ python3 -m pip install pybind11 pybind11_stubgen
 ```bash
 cd <clone of this repository>
 
+# 需先手动 clone/download Elite_Robots_CS_SDK。
+
 cmake -S . -B build \
-	-DELITE_CS_SDK_REPO=<Elite_Robots_CS_SDK 本地路径或仓库地址> \
+	-DELITE_CS_SDK_REPO=<Elite_Robots_CS_SDK 本地路径> \
 	-DELITE_COMPILE_KIN_PLUGIN=ON
 
 cmake --build build -j$(nproc) --target python_wheel
@@ -67,9 +69,11 @@ python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 ```bash
 cd <clone of this repository>
 
+# 需先手动 clone/download Elite_Robots_CS_SDK。
+
 cmake -S . -B build \
+	-DELITE_CS_SDK_REPO=<Elite_Robots_CS_SDK 本地路径> \
 	-DFETCHCONTENT_SOURCE_DIR_PYBIND11=<本地 pybind11 源码目录> \
-	-DFETCHCONTENT_SOURCE_DIR_ELITE_CS_SDK=<本地 Elite_Robots_CS_SDK 源码目录> \
 	-DFETCHCONTENT_UPDATES_DISCONNECTED=ON \
 	-DELITE_COMPILE_KIN_PLUGIN=ON \
 	-DPython3_EXECUTABLE=$(which python3)
@@ -84,8 +88,10 @@ python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 ```bash
 cd <clone of this repository>
 
+# 需先手动 clone/download Elite_Robots_CS_SDK。
+
 cmake -S . -B build \
-	-DELITE_CS_SDK_REPO=<Elite_Robots_CS_SDK 本地路径或仓库地址> \
+	-DELITE_CS_SDK_REPO=<Elite_Robots_CS_SDK 本地路径> \
 	-DELITE_COMPILE_KIN_PLUGIN=ON
 
 cmake --build build --config Release --target python_wheel
@@ -95,6 +101,8 @@ python -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 
 ## 说明
 
+- `ELITE_CS_SDK_REPO` 为必填项，且必须是本地仓库路径。
+- Elite_Robots_CS_SDK 不再由 CMake 自动拉取，需提前手动下载。
 - `python_wheel` 目标会自动触发扩展编译、`.pyi` 生成和 wheel 打包。
 - 运动学插件开启后，wheel 打包阶段会自动复制 `libelite_kdl_kinematics` 到包目录。
 - 如果只想验证扩展编译，不打包 wheel，可执行：
