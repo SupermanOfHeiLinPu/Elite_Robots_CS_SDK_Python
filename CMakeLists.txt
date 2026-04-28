@@ -51,7 +51,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 
             ${ELITE_PLUGIN_COPY_COMMANDS}
     )
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR APPLE)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_custom_command(TARGET copy_python_requirements POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${PKG_BUILD_DIR}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${PKG_BUILD_DIR}/package

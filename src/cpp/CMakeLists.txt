@@ -22,16 +22,6 @@ else()
   set(PYBIND11_REPO "https://github.com/pybind/pybind11.git")
 endif()
 
-# Check for macOS patch file and set PATCH_COMMAND accordingly
-set(MACOS_FIX_PATCH "${CMAKE_SOURCE_DIR}/macos_fixes.patch")
-if(EXISTS "${MACOS_FIX_PATCH}")
-  message(STATUS "Applying macOS fixes patch: ${MACOS_FIX_PATCH}")
-  set(ELITE_SDK_PATCH_CMD git apply "${MACOS_FIX_PATCH}")
-else()
-  message(STATUS "macos_fixes.patch not found, skipping patch step.")
-  set(ELITE_SDK_PATCH_CMD "")
-endif()
-
 
 FetchContent_Declare(
   pybind11
@@ -44,7 +34,6 @@ FetchContent_Declare(
   elite_cs_sdk
   GIT_REPOSITORY ${ELITE_CS_SDK_REPO}
   GIT_TAG main
-  PATCH_COMMAND ${ELITE_SDK_PATCH_CMD}
 )
 FetchContent_MakeAvailable(elite_cs_sdk)
 
@@ -121,17 +110,15 @@ endif()
 
 add_dependencies(elite_cs_sdk_python ${ELITE_SDK_SHARED_TARGET})
 
-# Correctly handle suffixes and RPATH for macOS
+# Configure suffix and RPATH for supported platforms.
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(ELITE_PY_SDK_SUFFIX ".pyd")
   set(ELITE_INSTALL_RPATH "") # No RPATH on Windows
-elseif(APPLE)
-  set(ELITE_PY_SDK_SUFFIX ".so")
-  # Use @loader_path for macOS RPATH, so the .so can find the .dylib
-  set(ELITE_INSTALL_RPATH "@loader_path")
-else() # Linux
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(ELITE_PY_SDK_SUFFIX ".so")
   set(ELITE_INSTALL_RPATH "$ORIGIN")
+else()
+  message(FATAL_ERROR "Unsupported operating system: ${CMAKE_SYSTEM_NAME}")
 endif()
 
 set_target_properties(elite_cs_sdk_python PROPERTIES
