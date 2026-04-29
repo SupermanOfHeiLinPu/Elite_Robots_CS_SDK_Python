@@ -48,6 +48,21 @@ python3 -m pip install --upgrade pip setuptools wheel build
 python3 -m pip install pybind11 pybind11_stubgen
 ```
 
+For Windows + vcpkg builds, `CMAKE_TOOLCHAIN_FILE` is required:
+
+```bash
+-DCMAKE_TOOLCHAIN_FILE=<your vcpkg path>/scripts/buildsystems/vcpkg.cmake
+```
+
+Example (PowerShell):
+
+```bash
+cmake -S . -B build `
+	-DELITE_CS_SDK_REPO=<local path of Elite_Robots_CS_SDK> `
+	-DELITE_COMPILE_KIN_PLUGIN=ON `
+	-DCMAKE_TOOLCHAIN_FILE=C:/Users/<your user>/vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+
 ## Build and Install
 
 ### Option A: Standard flow (online)
@@ -91,10 +106,12 @@ python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 cd <clone of this repository>
 
 # Manually clone/download Elite_Robots_CS_SDK first.
+# Also, for Windows + vcpkg, CMAKE_TOOLCHAIN_FILE must be specified.
 
 cmake -S . -B build \
 	-DELITE_CS_SDK_REPO=<local path of Elite_Robots_CS_SDK> \
-	-DELITE_COMPILE_KIN_PLUGIN=ON
+	-DELITE_COMPILE_KIN_PLUGIN=ON \
+	-DCMAKE_TOOLCHAIN_FILE=<your vcpkg path>/scripts/buildsystems/vcpkg.cmake
 
 cmake --build build --config Release --target python_wheel
 
@@ -107,6 +124,7 @@ python -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 - Elite_Robots_CS_SDK is no longer fetched by CMake; download it manually in advance.
 - `python_wheel` triggers extension build, `.pyi` generation, and wheel packaging.
 - With kinematics plugin enabled, `libelite_kdl_kinematics` is copied into package directory during wheel packaging.
+- For Windows + vcpkg builds, you must add `-DCMAKE_TOOLCHAIN_FILE=<your vcpkg path>/scripts/buildsystems/vcpkg.cmake`.
 - To verify only extension build without packaging, run:
 
 ```bash

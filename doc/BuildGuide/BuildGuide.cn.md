@@ -48,6 +48,21 @@ python3 -m pip install --upgrade pip setuptools wheel build
 python3 -m pip install pybind11 pybind11_stubgen
 ```
 
+Windows + vcpkg 构建时，`CMAKE_TOOLCHAIN_FILE` 参数是必填项：
+
+```bash
+-DCMAKE_TOOLCHAIN_FILE=<your vcpkg path>/scripts/buildsystems/vcpkg.cmake
+```
+
+示例（PowerShell）：
+
+```bash
+cmake -S . -B build `
+	-DELITE_CS_SDK_REPO=<Elite_Robots_CS_SDK 本地路径> `
+	-DELITE_COMPILE_KIN_PLUGIN=ON `
+	-DCMAKE_TOOLCHAIN_FILE=C:/Users/<your user>/vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+
 ## 编译与安装
 
 ### 方案 A：常规方式（可联网）
@@ -91,10 +106,12 @@ python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 cd <clone of this repository>
 
 # 需先手动 clone/download Elite_Robots_CS_SDK。
+# 且 Windows + vcpkg 场景必须指定 CMAKE_TOOLCHAIN_FILE。
 
 cmake -S . -B build \
 	-DELITE_CS_SDK_REPO=<Elite_Robots_CS_SDK 本地路径> \
-	-DELITE_COMPILE_KIN_PLUGIN=ON
+	-DELITE_COMPILE_KIN_PLUGIN=ON \
+	-DCMAKE_TOOLCHAIN_FILE=<your vcpkg path>/scripts/buildsystems/vcpkg.cmake
 
 cmake --build build --config Release --target python_wheel
 
@@ -107,6 +124,7 @@ python -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 - Elite_Robots_CS_SDK 不再由 CMake 自动拉取，需提前手动下载。
 - `python_wheel` 目标会自动触发扩展编译、`.pyi` 生成和 wheel 打包。
 - 运动学插件开启后，wheel 打包阶段会自动复制 `libelite_kdl_kinematics` 到包目录。
+- Windows + vcpkg 构建时，必须添加 `-DCMAKE_TOOLCHAIN_FILE=<your vcpkg path>/scripts/buildsystems/vcpkg.cmake`。
 - 如果只想验证扩展编译，不打包 wheel，可执行：
 
 ```bash
