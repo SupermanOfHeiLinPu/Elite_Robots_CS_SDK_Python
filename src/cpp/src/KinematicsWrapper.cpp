@@ -4,6 +4,9 @@
 
 #include <pybind11/stl.h>
 
+#ifndef ELITE_STATIC_LIBRARY
+#define ELITE_STATIC_LIBRARY
+#endif
 #include <Elite/KinematicsBase.hpp>
 
 #if defined(ELITE_PY_BIND_KDL_KINEMATICS_PLUGIN)
@@ -90,13 +93,22 @@ void bindKinematics(py::module_& m) {
                 Returns:
                     tuple: (ok, solutions, result)
             )doc")
-        .def("setDefaultTimeout", &KinematicsBase::setDefaultTimeout, py::arg("timeout"),
-             R"doc(Set the default timeout in seconds.)doc")
-        .def("getDefaultTimeout", &KinematicsBase::getDefaultTimeout, R"doc(Get the default timeout in seconds.)doc");
+        .def(
+            "setDefaultTimeout",
+            [](KinematicsBase& self, double timeout) {
+                self.setDefaultTimeout(timeout);
+            },
+            py::arg("timeout"),
+            R"doc(Set the default timeout in seconds.)doc")
+        .def(
+            "getDefaultTimeout",
+            [](const KinematicsBase& self) {
+                return self.getDefaultTimeout();
+            },
+            R"doc(Get the default timeout in seconds.)doc");
 
 #if defined(ELITE_PY_BIND_KDL_KINEMATICS_PLUGIN)
     py::class_<KdlKinematicsPlugin, KinematicsBase, std::shared_ptr<KdlKinematicsPlugin>>(
-        m, "KdlKinematicsPlugin", "KDL-based kinematics plugin implementation.")
-        .def(py::init<>(), "Construct a KDL kinematics plugin instance.");
+    m, "KdlKinematicsPlugin", "KDL-based kinematics plugin implementation.");
 #endif
 }

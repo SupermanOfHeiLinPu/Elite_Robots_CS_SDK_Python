@@ -89,6 +89,9 @@ if(TARGET elite_kdl_kinematics)
   target_include_directories(elite_cs_sdk_python PRIVATE "${ELITE_KDL_PLUGIN_INCLUDE_DIR}")
   target_link_libraries(elite_cs_sdk_python PRIVATE elite_kdl_kinematics)
 
+  # Ensure KDL dependency is visible in this directory scope for consumers of plugin headers.
+  find_package(orocos_kdl QUIET)
+
   # Some environments provide Eigen include dirs without exporting Eigen3::Eigen into this scope.
   find_package(Eigen3 QUIET)
 
@@ -114,6 +117,18 @@ if(TARGET elite_kdl_kinematics)
 
   if(TARGET orocos-kdl)
     target_link_libraries(elite_cs_sdk_python PRIVATE orocos-kdl)
+  elseif(TARGET orocos-kdl::orocos-kdl)
+    target_link_libraries(elite_cs_sdk_python PRIVATE orocos-kdl::orocos-kdl)
+  elseif(TARGET orocos_kdl)
+    target_link_libraries(elite_cs_sdk_python PRIVATE orocos_kdl)
+  endif()
+
+  if(DEFINED orocos_kdl_INCLUDE_DIRS)
+    target_include_directories(elite_cs_sdk_python SYSTEM PRIVATE ${orocos_kdl_INCLUDE_DIRS})
+  endif()
+
+  if(DEFINED orocos_kdl_INCLUDE_DIR)
+    target_include_directories(elite_cs_sdk_python SYSTEM PRIVATE ${orocos_kdl_INCLUDE_DIR})
   endif()
 
   target_compile_definitions(elite_cs_sdk_python PRIVATE ELITE_PY_BIND_KDL_KINEMATICS_PLUGIN=1)
