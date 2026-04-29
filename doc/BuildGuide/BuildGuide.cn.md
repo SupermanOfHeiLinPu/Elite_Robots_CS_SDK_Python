@@ -29,6 +29,8 @@ python3 -m pip install pybind11 pybind11_stubgen
 ```bash
 .\vcpkg install boost-asio
 .\vcpkg install libssh
+.\vcpkg install orocos-kdl
+.\vcpkg install eigen3
 .\vcpkg integrate install
 ```
 
@@ -59,7 +61,7 @@ cmake -S . -B build \
 	-DELITE_CS_SDK_REPO=<Elite_Robots_CS_SDK 本地路径> \
 	-DELITE_COMPILE_KIN_PLUGIN=ON
 
-cmake --build build -j$(nproc) --target python_wheel
+cmake --build build --target python_wheel
 
 python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 ```
@@ -78,7 +80,7 @@ cmake -S . -B build \
 	-DELITE_COMPILE_KIN_PLUGIN=ON \
 	-DPython3_EXECUTABLE=$(which python3)
 
-cmake --build build -j1 --target python_wheel
+cmake --build build --target python_wheel
 
 python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 ```
