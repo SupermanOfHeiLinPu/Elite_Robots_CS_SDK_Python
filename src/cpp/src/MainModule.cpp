@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025, Elite Robots.
 #include "ControllerLogWrapper.hpp"
+#include "ClassLoaderWrapper.hpp"
 #include "DashboardClientWrapper.hpp"
 #include "DataTypeWrapper.hpp"
 #include "EliteDriverWrapper.hpp"
+#include "KinematicsWrapper.hpp"
 #include "LogWrapper.hpp"
 #include "PrimaryPackageWrapper.hpp"
 #include "PrimaryPortInterfaceWrapper.hpp"
@@ -79,6 +81,8 @@ PYBIND11_MODULE(elite_cs_sdk_python, m) {
     bindDashboardClient(m);
     bindRobotException(m);
     bindPrimaryPortInterface(m);
+    bindKinematics(m);
+    bindClassLoader(m);
     bindEliteDriver(m);
     bindPrimaryPackage(m);
     bindRtsiClientInterface(m);

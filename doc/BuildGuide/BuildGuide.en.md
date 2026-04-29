@@ -3,68 +3,130 @@
 ## Dependency Installation
 
 ### Ubuntu
+
 ```bash
 sudo apt update
 
-sudo apt install libboost-all-dev
+# Base tools
+sudo apt install -y build-essential cmake git python3 python3-pip
 
-sudo apt install libssh-dev # Optional, recommended, version 0.9.6 is recommended
+# SDK dependencies
+sudo apt install -y libboost-all-dev libssh-dev
 
-# sudo apt install sshpass # Required if libssh-dev is not installed
+# Kinematics plugin dependencies (recommended when ELITE_COMPILE_KIN_PLUGIN=ON)
+sudo apt install -y libeigen3-dev liborocos-kdl-dev
+
+# The python_wheel target uses --no-build-isolation.
+# Install these packages in the same Python environment used for build.
 python3 -m pip install --upgrade pip setuptools wheel build
-
-python3 -m pip install --user pybind11 pybind11_stubgen
+python3 -m pip install pybind11 pybind11_stubgen
 ```
 
 ### Windows
 
-Install using `vcpkg`
+Install with `vcpkg`:
+
 ```bash
 .\vcpkg install boost-asio
-
 .\vcpkg install libssh
-
+.\vcpkg install orocos-kdl
+.\vcpkg install eigen3
 .\vcpkg integrate install
 ```
 
-(Optional) If you have already installed the complete `boost` library using vcpkg, it is recommended to execute the following command to remove Python-related content from vcpkg. Otherwise, the compilation of this library will use vcpkg's Python instead of the Python in your operating system.
+Optional: if full boost has already been installed via vcpkg, it is recommended to remove vcpkg Python-related packages to avoid using vcpkg Python by mistake during build.
+
 ```bash
 .\vcpkg remove python3 boost-parameter-python boost-python
-
 .\vcpkg integrate install
 ```
 
-Install required components for Python packaging
+Install Python packaging dependencies:
+
 ```bash
 python3 -m pip install --upgrade pip setuptools wheel build
-
-python3 -m pip install --user pybind11 pybind11_stubgen
+python3 -m pip install pybind11 pybind11_stubgen
 ```
 
-## Compilation and Installation
+For Windows + vcpkg builds, `CMAKE_TOOLCHAIN_FILE` is required:
 
-### Ubuntu
+```bash
+-DCMAKE_TOOLCHAIN_FILE=<your vcpkg path>/scripts/buildsystems/vcpkg.cmake
+```
+
+Example (PowerShell):
+
+```bash
+cmake -S . -B build `
+	-DELITE_CS_SDK_REPO=<local path of Elite_Robots_CS_SDK> `
+	-DELITE_COMPILE_KIN_PLUGIN=ON `
+	-DCMAKE_TOOLCHAIN_FILE=C:/Users/<your user>/vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+
+## Build and Install
+
+### Option A: Standard flow (online)
+
 ```bash
 cd <clone of this repository>
 
-mkdir build && cd build
+# Manually clone/download Elite_Robots_CS_SDK first.
 
-cmake ..
+cmake -S . -B build \
+	-DELITE_CS_SDK_REPO=<local path of Elite_Robots_CS_SDK> \
+	-DELITE_COMPILE_KIN_PLUGIN=ON
 
-make
+cmake --build build --target python_wheel
 
-pip install ../dist/elite_cs_sdk-*.whl
+python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
 ```
 
-### Windows
+### Option B: Weak-network / offline flow
+
 ```bash
 cd <clone of this repository>
 
-mkdir build && cd build
+# Manually clone/download Elite_Robots_CS_SDK first.
 
-cmake ..
+cmake -S . -B build \
+	-DELITE_CS_SDK_REPO=<local path of Elite_Robots_CS_SDK> \
+	-DFETCHCONTENT_SOURCE_DIR_PYBIND11=<local pybind11 source dir> \
+	-DFETCHCONTENT_UPDATES_DISCONNECTED=ON \
+	-DELITE_COMPILE_KIN_PLUGIN=ON \
+	-DPython3_EXECUTABLE=$(which python3)
 
-cmake --build . --config Release
+cmake --build build --target python_wheel
 
-pip install ../dist/elite_cs_sdk-*.whl
+python3 -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
+```
+
+### Windows reference commands
+
+```bash
+cd <clone of this repository>
+
+# Manually clone/download Elite_Robots_CS_SDK first.
+# Also, for Windows + vcpkg, CMAKE_TOOLCHAIN_FILE must be specified.
+
+cmake -S . -B build \
+	-DELITE_CS_SDK_REPO=<local path of Elite_Robots_CS_SDK> \
+	-DELITE_COMPILE_KIN_PLUGIN=ON \
+	-DCMAKE_TOOLCHAIN_FILE=<your vcpkg path>/scripts/buildsystems/vcpkg.cmake
+
+cmake --build build --config Release --target python_wheel
+
+python -m pip install --force-reinstall dist/elite_cs_sdk-*.whl
+```
+
+## Notes
+
+- `ELITE_CS_SDK_REPO` is mandatory and must be a local repository path.
+- Elite_Robots_CS_SDK is no longer fetched by CMake; download it manually in advance.
+- `python_wheel` triggers extension build, `.pyi` generation, and wheel packaging.
+- With kinematics plugin enabled, `libelite_kdl_kinematics` is copied into package directory during wheel packaging.
+- For Windows + vcpkg builds, you must add `-DCMAKE_TOOLCHAIN_FILE=<your vcpkg path>/scripts/buildsystems/vcpkg.cmake`.
+- To verify only extension build without packaging, run:
+
+```bash
+cmake --build build -j1 --target elite_cs_sdk_python
 ```

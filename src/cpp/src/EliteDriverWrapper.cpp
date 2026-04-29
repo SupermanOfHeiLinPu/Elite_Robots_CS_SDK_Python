@@ -30,7 +30,15 @@ static void bindEliteDriverConfig(py::module_& m) {
         .def_readwrite("servoj_lookahead_time", &EliteDriverConfig::servoj_lookahead_time,
                        "Time [S], range [0.03,0.2] smoothens the trajectory with this lookahead time")
         .def_readwrite("servoj_gain", &EliteDriverConfig::servoj_gain, "Servo gain.")
-        .def_readwrite("stopj_acc", &EliteDriverConfig::stopj_acc, "Acceleration [rad/s^2]. The acceleration of stopj motion.");
+        .def_readwrite("stopj_acc", &EliteDriverConfig::stopj_acc, "Acceleration [rad/s^2]. The acceleration of stopj motion.")
+        .def_readwrite("servoj_extrapolate_max_time", &EliteDriverConfig::servoj_extrapolate_max_time,
+                       "Maximum duration [S] for constant-velocity extrapolation.")
+        .def_readwrite("servoj_decelerate_time", &EliteDriverConfig::servoj_decelerate_time,
+                       "Deceleration duration [S] used to ramp extrapolation speed to zero.")
+        .def_readwrite("servoj_hold_velocity_threshold", &EliteDriverConfig::servoj_hold_velocity_threshold,
+                       "Joint velocity threshold [rad/s] for hold lock decision.")
+        .def_readwrite("servoj_hold_stable_time", &EliteDriverConfig::servoj_hold_stable_time,
+                       "Stable duration [S] required before locking hold position.");
 }
 
 static void bindEliteDriverClass(py::module_& m) {
@@ -288,6 +296,30 @@ static void bindEliteDriverClass(py::module_& m) {
         .def("endToolRs485", &EliteDriver::endToolRs485, py::arg("com"), py::arg("ssh_password"),
              R"doc(
                 End tool RS485 communication
+
+                Args:
+                    com (SerialCommunication): TCP communication object for RS485 communication. If not None, it will be disconnected.
+                    ssh_password (str): SSH password for robot control cabinet
+
+                Returns:
+                    bool: True if success
+            )doc")
+        .def("startBoardRs485", &EliteDriver::startBoardRs485, py::arg("config"), py::arg("ssh_password"), py::arg("tcp_port") = 54322,
+             R"doc(
+                Start board RS485 communication.
+                This function will start a socat process on the robot control cabinet, mapping the serial port to the TCP port you specified.
+
+                Args:
+                    config (SerialConfig): Serial communication configuration
+                    ssh_password (str): SSH password for robot control cabinet
+                    tcp_port (int): TCP port of the serial communication server
+
+                Returns:
+                    SerialCommunication: A TCP communication object for RS485 communication. nullptr if start fail.
+            )doc")
+        .def("endBoardRs485", &EliteDriver::endBoardRs485, py::arg("com"), py::arg("ssh_password"),
+             R"doc(
+                End board RS485 communication
 
                 Args:
                     com (SerialCommunication): TCP communication object for RS485 communication. If not None, it will be disconnected.
